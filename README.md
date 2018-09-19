@@ -5,8 +5,8 @@
 3. Esperar o Gradle baixar as dependências
 4. Executar o projeto via emulador ou smartphone Android versão 8.0 ou maior (Oreo)
 
-##Imagens 
-![Lista tipo catalogo](/images/a.png)
+## Imagens 
+![Lista tipo catalogo](/images/catalogo.png)
 
 
-![Lista vertical](/images/b.png)
+![Lista vertical](/images/vertical.png)
