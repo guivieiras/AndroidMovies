@@ -133,20 +133,5 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.MyVi
     {
         return dataSet.size();
     }
-//    @Override
-//    public int getItemViewType(int position) {
-//        return 10;
-//    }
 
-//    @Override
-//    public void onViewAttachedToWindow(final RecyclerView.ViewHolder holder)
-//        super.onViewAttachedToWindow(holder);
-//    }
-//
-//    @Override
-//    public void onViewDetachedFromWindow(final RecyclerView.ViewHolder holder) {
-//            holder.setIsRecyclable(true);
-//
-//        super.onViewDetachedFromWindow(holder);
-//    }
 }
