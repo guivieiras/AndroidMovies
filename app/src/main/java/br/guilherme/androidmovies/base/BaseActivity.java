@@ -10,7 +10,10 @@ import android.net.NetworkInfo;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.github.ybq.android.spinkit.style.DoubleBounce;
 
 import br.guilherme.androidmovies.R;
 
@@ -37,27 +40,16 @@ public abstract class BaseActivity<P extends BasePresenter> extends AppCompatAct
     /** Exibe uma caixa de dialogo, a qual ira finalizar a Activity após ser fechada */
     protected void showDialogMessageAndFinish(int messageId, Integer titleId)
     {
-        showDialogMessage(messageId, titleId, new DialogInterface.OnClickListener()
-                          {
-                              public void onClick(DialogInterface dialog, int id)
-                              {
-                                  dialog.dismiss();
-                                  finish();
-                              }
-                          }
+        showDialogMessage(messageId, titleId, (dialog, id) -> {
+            dialog.dismiss();
+            finish();
+        }
         );
     }
 
     /** Exibe uma caixa de dialogo com uma mensagem e um titulo, o qual é opcional */
     protected void showDialogMessage(int messageId, Integer titleId){
-        showDialogMessage(messageId, titleId, new DialogInterface.OnClickListener()
-                          {
-                              public void onClick(DialogInterface dialog, int id)
-                              {
-                                  dialog.dismiss();
-                              }
-                          }
-        );
+        showDialogMessage(messageId, titleId, (dialog, id) -> dialog.dismiss());
     }
 
     /** Exibe uma caixa de dialogo com uma mensagem e um titulo, o qual é opcional, mais a ação do botão de Ok */
@@ -97,6 +89,18 @@ public abstract class BaseActivity<P extends BasePresenter> extends AppCompatAct
         alertDialogBuilder.create().show();
     }
 
+    public void showPBar(){
+        ProgressDialog.Builder p = new  ProgressDialog.Builder(this);
+        p.setTitle("Porra");
+        android.app.AlertDialog x = p.create();
+
+
+        //ProgressBar progressBar = ProgressBar.(ProgressBar)findViewById(R.id.progress);
+        DoubleBounce doubleBounce = new DoubleBounce();
+        x.setFeatureDrawable(0, doubleBounce);
+        //progressBar.setIndeterminateDrawable(doubleBounce);
+        x.show();
+    }
 
     /** Exibe dialogo de Loading */
     public void showProgress()

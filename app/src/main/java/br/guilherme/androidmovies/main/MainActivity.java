@@ -2,6 +2,7 @@ package br.guilherme.androidmovies.main;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -22,8 +23,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.ybq.android.spinkit.SpinKitView;
+
 import org.w3c.dom.Text;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,6 +37,7 @@ import java.util.stream.Stream;
 import br.guilherme.androidmovies.Helpers;
 import br.guilherme.androidmovies.R;
 import br.guilherme.androidmovies.base.BaseActivity;
+import br.guilherme.androidmovies.data.InternalStorage;
 import br.guilherme.androidmovies.moviedb.ApiFactory;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -42,14 +47,16 @@ import info.movito.themoviedbapi.model.core.MovieResultsPage;
 
 
 
-public class MainActivity extends BaseActivity<MainPresenter> implements NavigationView.OnNavigationItemSelectedListener
-{
+public class MainActivity extends BaseActivity<MainPresenter> {
 
     @BindView(R.id.movieList)
     RecyclerView movieList;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+
+    @BindView(R.id.spin_kit)
+    SpinKitView spinKit;
 
     private boolean isViewWithCatalog;
 
@@ -67,8 +74,11 @@ public class MainActivity extends BaseActivity<MainPresenter> implements Navigat
 
         setSupportActionBar(toolbar);
 
-        movieList.setLayoutManager(isViewWithCatalog ? new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL):new LinearLayoutManager(this) );
-        mla = new MovieListAdapter(new ArrayList<>(), isViewWithCatalog, this, item ->
+        updateListLayoutManager(getResources().getConfiguration());
+
+        List<MovieDb> movies = presenter.loadCachedMovies();
+
+        mla = new MovieListAdapter(movies, isViewWithCatalog, this, item ->
         {
             AlertDialog.Builder b = new AlertDialog.Builder(MainActivity.this);
             View v = getLayoutInflater().inflate(R.layout.dialog_movie_details, null);
@@ -85,9 +95,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements Navigat
             release_date.setText(Helpers.getFormatedDate(item.getReleaseDate()));
             overview.setText(item.getOverview());
 
-
-
-
+            //Removido pois API não carrega os gêneros dos filmes
             //List<String> a = item.getGenres().stream().map(x->x.getName()).collect(Collectors.toList());
             //genre.setText(String.join(", ", a));
 
@@ -102,8 +110,15 @@ public class MainActivity extends BaseActivity<MainPresenter> implements Navigat
         movieList.setAdapter(mla);
     }
 
+    @Override
+    public void onPause(){
+        super.onPause();
+        presenter.cacheMovies(mla.getItems());
+    }
+
     public void receiveMovieList(MovieResultsPage upcoming)
     {
+        hideLoading();
         mla.update(upcoming.getResults());
     }
 
@@ -132,19 +147,17 @@ public class MainActivity extends BaseActivity<MainPresenter> implements Navigat
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()){
             case R.id.action_refresh_movies:
-                movieList.setBackground(getDrawable(R.drawable.ic_rolling));
+                mla.clear();
+                showLoading();
                 presenter.updateMovieList();
                 return true;
             case R.id.action_change_view_mode:
                 isViewWithCatalog = !isViewWithCatalog;
                 supportInvalidateOptionsMenu();
 
-                movieList.setLayoutManager(isViewWithCatalog ? new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL):new LinearLayoutManager(this) );
+                updateListLayoutManager(getResources().getConfiguration());
                 mla.alternateLayoutMode();
                 movieList.setAdapter(mla);
 
@@ -154,37 +167,30 @@ public class MainActivity extends BaseActivity<MainPresenter> implements Navigat
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item)
-    {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
+    public void updateListLayoutManager(Configuration config){
+        int orientation = config.orientation;
 
-        if (id == R.id.nav_camera)
-        {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery)
-        {
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE)
+            movieList.setLayoutManager(isViewWithCatalog ? new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL):new LinearLayoutManager(this) );
+        else
+            movieList.setLayoutManager(isViewWithCatalog ? new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL):new LinearLayoutManager(this) );
 
-        } else if (id == R.id.nav_slideshow)
-        {
-
-        } else if (id == R.id.nav_manage)
-        {
-
-        } else if (id == R.id.nav_share)
-        {
-
-        } else if (id == R.id.nav_send)
-        {
-
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
+
+    public void showLoading(){
+        spinKit.setVisibility(View.VISIBLE);
+    }
+    public void hideLoading(){
+        spinKit.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+        updateListLayoutManager(newConfig);
+    }
+
 
 
 }
